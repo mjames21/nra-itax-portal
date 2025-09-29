@@ -1,66 +1,106 @@
-@php $badge = fn($ok) => $ok ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; @endphp
-
-<div class="mx-auto max-w-xl p-6">
-    <h1 class="text-2xl font-semibold mb-1">Validate a TIN</h1>
-    <p class="text-sm text-gray-600 mb-4">Enter a Taxpayer Identification Number for bidders, suppliers, or contractors.</p>
-
-    <form wire:submit.prevent="lookup" class="space-y-4">
-        <div>
-            <label for="tin" class="block text-sm font-medium text-gray-700">Enter TIN</label>
-            <input wire:model.defer="tin" id="tin" type="text" inputmode="numeric" autocomplete="off"
-                   class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="e.g. 1000039609" />
-            @error('tin') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+<div>
+    <!-- HERO -->
+    <section class="relative overflow-hidden bg-gradient-to-b from-slate-900 to-blue-900 text-white">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+            <div class="max-w-3xl">
+                <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+                    Validate a TIN
+                </h1>
+                <p class="mt-4 text-lg text-blue-100/95">
+                    Check if a Taxpayer Identification Number (TIN) is valid and mapped to the
+                    current business profile in the NRA registry. Confirm registration status,
+                    compliance, and contact details before awarding or onboarding.
+                </p>
+            </div>
         </div>
+    </section>
 
-        <button type="submit" class="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800">
-            <span wire:loading.remove>Validate</span>
-            <span wire:loading>Checking…</span>
-        </button>
-        <span wire:loading class="text-sm text-gray-500 ml-2">Contacting service…</span>
-    </form>
+    <!-- LOOKUP FORM -->
+    <section class="bg-white">
+        <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 -mt-12">
+            <div class="rounded-2xl border bg-white shadow-sm p-8">
+                <form wire:submit.prevent="lookup" class="space-y-6">
+                    <div>
+                        <label for="tin" class="block text-sm font-medium text-gray-700">Enter TIN</label>
+                        <input
+                            id="tin"
+                            type="text"
+                            wire:model.defer="tin"
+                            placeholder="e.g. 1000039609"
+                            class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
+                        />
+                        @error('tin')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
+                    <div>
+                        <button
+                            type="submit"
+                            class="inline-flex items-center rounded-xl bg-blue-700 px-6 py-3 text-white font-semibold shadow hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600"
+                        >
+                            Validate
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- RESULTS -->
     @if($error)
-        <div class="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">{{ $error }}</div>
+        <section class="bg-red-50">
+            <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-6">
+                <div class="rounded-xl bg-red-100 border border-red-200 p-4 text-red-800">
+                    {{ $error }}
+                </div>
+            </div>
+        </section>
     @endif
 
     @if($result)
-        <div class="mt-6 rounded-md border p-4">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold">Result</h2>
-                <span class="text-xs px-2 py-1 rounded {{ $badge($result['is_valid']) }}">
-                    {{ $result['is_valid'] ? 'Valid & Registered' : 'Not Registered / Inactive' }}
-                </span>
+        <section class="bg-gray-50">
+            <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12">
+                <div class="grid gap-6 lg:grid-cols-3">
+                    <!-- Business Info -->
+                    <div class="rounded-2xl border bg-white p-6 shadow-sm">
+                        <div class="text-sm font-semibold text-gray-500">Business</div>
+                        <div class="mt-2 text-lg font-bold text-gray-900">
+                            {{ $result['business_name'] ?? 'N/A' }}
+                        </div>
+                        <p class="mt-1 text-sm text-gray-600">TIN: {{ $result['tin'] ?? $tin }}</p>
+                        <p class="mt-1 text-sm text-gray-600">Registered: {{ $result['registration_year'] ?? 'N/A' }}</p>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="rounded-2xl border bg-white p-6 shadow-sm">
+                        <div class="text-sm font-semibold text-gray-500">Status</div>
+                        <div class="mt-2 text-lg font-bold text-gray-900">
+                            {{ $result['status'] ?? 'N/A' }}
+                        </div>
+                        <p class="mt-1 text-sm text-gray-600">
+                            {{ $result['is_valid'] ? 'Valid and mapped' : 'Not found / Invalid' }}
+                        </p>
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="rounded-2xl border bg-white p-6 shadow-sm">
+                        <div class="text-sm font-semibold text-gray-500">Contact</div>
+                        <div class="mt-2 text-lg font-bold text-gray-900">
+                            {{ $result['contact_email'] ?? 'N/A' }}
+                        </div>
+                        <p class="mt-1 text-sm text-gray-600">Primary email on file</p>
+                    </div>
+                </div>
+
+                <!-- Raw payload toggle -->
+                @if($result['raw'])
+                    <details class="mt-10 rounded-xl border bg-white p-5 shadow-sm">
+                        <summary class="cursor-pointer font-medium text-gray-800">View full registry record</summary>
+                        <pre class="mt-4 overflow-x-auto text-sm text-gray-700">{{ json_encode($result['raw'], JSON_PRETTY_PRINT) }}</pre>
+                    </details>
+                @endif
             </div>
-
-            <dl class="mt-4 space-y-2">
-                <div class="flex justify-between">
-                    <dt class="text-sm text-gray-500">Business Name</dt>
-                    <dd class="text-sm font-medium">{{ $result['business_name'] ?? '—' }}</dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-sm text-gray-500">Registration Year</dt>
-                    <dd class="text-sm font-medium">{{ $result['registration_year'] ?? '—' }}</dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-sm text-gray-500">Contact Email</dt>
-                    <dd class="text-sm font-medium">
-                        @if(!empty($result['contact_email']))
-                            <a href="mailto:{{ $result['contact_email'] }}" class="underline">{{ $result['contact_email'] }}</a>
-                        @else — @endif
-                    </dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-sm text-gray-500">Status</dt>
-                    <dd class="text-sm font-medium">{{ $result['status'] ?? '—' }}</dd>
-                </div>
-            </dl>
-
-            @if(!empty($result['raw']))
-            <details class="mt-4">
-                <summary class="cursor-pointer text-sm text-gray-600">Raw details</summary>
-                <pre class="mt-2 overflow-x-auto rounded bg-gray-50 p-3 text-xs">{{ json_encode($result['raw'], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre>
-            </details>
-            @endif
-        </div>
+        </section>
     @endif
 </div>
